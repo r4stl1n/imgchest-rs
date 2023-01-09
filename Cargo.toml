@@ -1,0 +1,11 @@
+[workspace]
+members = [
+    "imgchest",
+    "imgchest-cli"
+]
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
+strip = "symbols"
+opt-level = 3
