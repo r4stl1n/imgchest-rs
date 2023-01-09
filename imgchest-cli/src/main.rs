@@ -70,7 +70,7 @@ async fn async_main(options: Options) -> anyhow::Result<()> {
                 if image.video_link.is_some() {
                     total_downloads += 1;
                 }
-                spawn_image_download(&client, &mut join_set, &image, &out_dir);
+                spawn_image_download(&client, &mut join_set, image, &out_dir);
             }
 
             if let Some(extra_image_count) = post.extra_image_count {
