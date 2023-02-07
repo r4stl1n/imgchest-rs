@@ -98,7 +98,7 @@ async fn async_main(options: Options) -> anyhow::Result<()> {
                 {
                     Ok(_new_download) => {
                         downloaded += 1;
-                        println!("{} / {}...", downloaded, total_downloads);
+                        println!("{downloaded} / {total_downloads}...");
                     }
                     Err(e) => {
                         last_error = Some(e);
