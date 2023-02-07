@@ -9,7 +9,7 @@ name = "imgchest"
 path = "src/main.rs"
 
 [dependencies]
-anyhow = "1.0.68"
+anyhow = "1.0.69"
 argh = "0.1.10"
 imgchest = { version = "0.0.0", path = "../imgchest", features = [ "serde" ] }
 nd-util = { git = "https://github.com/nathaniel-daniel/nd-util-rs", version = "0.0.0", features = ["download-to-path"] }
