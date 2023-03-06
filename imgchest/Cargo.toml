@@ -9,13 +9,13 @@ once_cell = { version = "1.17.1", default-features = false, features = ["std"] }
 reqwest = { version = "0.11.14", features = [ "cookies" ], default-features = false }
 scraper = { version = "0.14.0", default-features = false }
 thiserror = "1.0.39"
-tokio = "1.25.0"
+tokio = "1.26.0"
 
 # Optional
 serde = { version = "1.0.152", features = ["derive"], optional = true }
 
 [dev-dependencies]
-tokio = { version = "1.25.0", features = [ "macros" ] }
+tokio = { version = "1.26.0", features = [ "macros" ] }
 
 [features]
 default = ["rustls-tls"]
