@@ -43,9 +43,10 @@ skip = [
     { name = "phf_generator", version = "0.8.0" },
     { name = "phf_codegen", version = "0.8.0" },
     { name = "phf", version = "0.8.0" },
-    { name = "itoa", version = "0.4.8" },
     { name = "idna", version = "0.2.3" },
     { name = "getrandom", version = "0.1.16" },
+    { name = "base64", version = "0.13.1" },
+    { name = "windows-sys", version = "0.42.0" },
 ]
 deny = []
 

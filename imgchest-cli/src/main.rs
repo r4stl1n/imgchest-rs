@@ -133,14 +133,11 @@ fn spawn_image_download(
             .map(|file_name| out_dir.join(file_name));
         join_set.spawn(async move {
             let out_path = out_path_result?;
-            match tokio::fs::metadata(&out_path).await {
-                Ok(_metadata) => {
-                    return Ok(false);
-                }
-                Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}
-                Err(e) => {
-                    return Err(e).context("failed to check if file exists");
-                }
+            if tokio::fs::try_exists(&out_path)
+                .await
+                .context("failed to check if file exists")?
+            {
+                return Ok(false);
             }
 
             nd_util::download_to_path(&client.client, &link, &out_path).await?;
@@ -159,14 +156,11 @@ fn spawn_image_download(
             .map(|file_name| out_dir.join(file_name));
         join_set.spawn(async move {
             let out_path = out_path_result?;
-            match tokio::fs::metadata(&out_path).await {
-                Ok(_metadata) => {
-                    return Ok(false);
-                }
-                Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}
-                Err(e) => {
-                    return Err(e).context("failed to check if file exists");
-                }
+            if tokio::fs::try_exists(&out_path)
+                .await
+                .context("failed to check if file exists")?
+            {
+                return Ok(false);
             }
 
             nd_util::download_to_path(&client.client, &video_link, &out_path).await?;
