@@ -6,7 +6,7 @@ license = "MIT OR Apache-2.0"
 
 [dependencies]
 once_cell = { version = "1.17.1", default-features = false, features = ["std"] }
-reqwest = { version = "0.11.14", features = [ "cookies" ], default-features = false }
+reqwest = { version = "0.11.16", features = [ "cookies" ], default-features = false }
 scraper = { version = "0.16.0", default-features = false }
 thiserror = "1.0.40"
 tokio = "1.27.0"
