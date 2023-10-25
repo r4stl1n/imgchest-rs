@@ -127,8 +127,7 @@ fn spawn_image_download(
         let out_path_result = image
             .link
             .split('/')
-            .rev()
-            .next()
+            .next_back()
             .context("missing file name")
             .map(|file_name| out_dir.join(file_name));
         join_set.spawn(async move {
@@ -150,8 +149,7 @@ fn spawn_image_download(
         let client = client.clone();
         let out_path_result = video_link
             .split('/')
-            .rev()
-            .next()
+            .next_back()
             .context("missing file name")
             .map(|file_name| out_dir.join(file_name));
         join_set.spawn(async move {
