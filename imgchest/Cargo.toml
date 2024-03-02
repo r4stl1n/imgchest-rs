@@ -12,7 +12,7 @@ thiserror = "1.0.57"
 tokio = "1.35.1"
 
 # Optional
-serde = { version = "1.0.193", features = ["derive"], optional = true }
+serde = { version = "1.0.197", features = ["derive"], optional = true }
 
 [dev-dependencies]
 tokio = { version = "1.35.1", features = [ "macros" ] }
