@@ -1,3 +1,4 @@
+[graph]
 targets = [
     { triple = "x86_64-unknown-linux-gnu" },
     { triple = "x86_64-pc-windows-msvc" },
@@ -5,17 +6,10 @@ targets = [
 ]
 
 [advisories]
-vulnerability = "deny"
-unmaintained = "deny"
-notice = "deny"
 ignore = []
 
 [licenses]
-unlicensed = "deny"
-copyleft = "deny"
-allow-osi-fsf-free = "neither"
 confidence-threshold = 0.93
-default = "deny"
 private = { ignore = true }
 allow = [ "Apache-2.0", "MIT", "BSD-3-Clause", "Unicode-DFS-2016", "MPL-2.0", "ISC", "OpenSSL" ]
 exceptions = []
@@ -36,19 +30,15 @@ license-files = [
 multiple-versions = "warn"
 highlight = "all"
 skip = [
-    { name = "rand_core", version = "0.5.1" },
-    { name = "rand_chacha", version = "0.2.2" },
-    { name = "rand", version = "0.7.3" },
-    { name = "phf_shared", version = "0.8.0" },
-    { name = "phf_generator", version = "0.8.0" },
-    { name = "phf_codegen", version = "0.8.0" },
-    { name = "phf", version = "0.8.0" },
-    { name = "idna", version = "0.2.3" },
-    { name = "getrandom", version = "0.1.16" },
     { name = "syn", version = "1.0.109" },
-    { name = "socket2", version = "0.4.10" },
+    { name = "windows_x86_64_msvc", version = "0.48.5" },
+    { name = "windows_x86_64_gnu", version = "0.48.5" },
+    { name = "windows-targets", version = "0.48.0" },
+    { name = "windows-sys", version = "0.48.0" },
+    { name = "phf_shared", version = "0.10.0" },
+    { name = "phf_generator", version = "0.10.0" },
+    { name = "phf", version = "0.10.1" },
     { name = "idna", version = "0.3.0" },
-    { name = "bitflags",  version = "1.3.2" },
 ]
 deny = []
 

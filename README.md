@@ -1,5 +1,5 @@
 # imgchest-rs
-A Rust library to interact with imgchest.com.
+A Rust library to interact with [imgchest.com](https://imgchest.com).
 
 ## Design
 This library will attempt to completely avoid official API usage.
