@@ -29,17 +29,16 @@ pub enum FromHtmlError {
 }
 
 /// A Post
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct Post {
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct ScrapedPost {
     /// The id of the post
-    pub id: String,
+    pub id: Box<str>,
 
     /// The title of the post
-    pub title: String,
+    pub title: Box<str>,
 
     /// The author of the post
-    pub username: String,
+    pub username: Box<str>,
 
     // /// The post privacy
     // pub privacy: String,
@@ -57,21 +56,21 @@ pub struct Post {
     // /// The timestamp of post creation
     // pub created: String,
     /// Post images
-    pub images: Vec<Image>,
+    pub images: Box<[File]>,
 
     /// The number of extra images.
     ///
-    /// Note that this is not part of the official api object.
+    /// This is not part of the official api object.
     pub extra_image_count: Option<u32>,
 
     /// The csrf token for the page
     ///
     /// Only useful for loading more image data.
-    /// Note that this is not part of the official api object.
-    pub token: String,
+    /// This is not part of the official api object.
+    pub token: Box<str>,
 }
 
-impl Post {
+impl ScrapedPost {
     /// Parse this from html
     pub(crate) fn from_html(html: &Html) -> Result<Self, FromHtmlError> {
         static ID_SELECTOR: Lazy<Selector> =
@@ -82,7 +81,7 @@ impl Post {
             Lazy::new(|| Selector::parse("a[href^=\"https://imgchest.com/u/\"]").unwrap());
         static VIEWS_SELECTOR: Lazy<Selector> =
             Lazy::new(|| Selector::parse("meta[name=\"twitter:description\"]").unwrap());
-        static POST_IMAGE_SELECTOR: Lazy<Selector> =
+        static POST_FILE_SELECTOR: Lazy<Selector> =
             Lazy::new(|| Selector::parse("#post-images > div[id^=\"image\"]").unwrap());
         static LOAD_MORE_SELECTOR: Lazy<Selector> =
             Lazy::new(|| Selector::parse("#post-images .load-all").unwrap());
@@ -97,14 +96,15 @@ impl Post {
                     meta.value()
                         .attr("content")?
                         .strip_prefix("https://imgchest.com/p/")?
-                        .to_string(),
+                        .into(),
                 )
             })
             .ok_or(FromHtmlError::MissingId)?;
+
         let title = html
             .select(&TITLE_SELECTOR)
             .next()
-            .and_then(|meta| Some(meta.value().attr("content")?.trim().to_string()))
+            .and_then(|meta| Some(meta.value().attr("content")?.trim().into()))
             .ok_or(FromHtmlError::MissingTitle)?;
 
         let username = html
@@ -115,7 +115,7 @@ impl Post {
                     a.value()
                         .attr("href")?
                         .strip_prefix("https://imgchest.com/u/")?
-                        .to_string(),
+                        .into(),
                 )
             })
             .ok_or(FromHtmlError::MissingUsername)?;
@@ -136,8 +136,8 @@ impl Post {
             .ok_or(FromHtmlError::MissingViews)??;
 
         let images = html
-            .select(&POST_IMAGE_SELECTOR)
-            .map(Image::from_element)
+            .select(&POST_FILE_SELECTOR)
+            .map(File::from_element)
             .collect::<Result<Vec<_>, _>>()?;
 
         let extra_image_count: Option<u32> =
@@ -159,7 +159,7 @@ impl Post {
         let token = html
             .select(&TOKEN_SELECTOR)
             .next()
-            .and_then(|meta| Some(meta.value().attr("content")?.to_string()))
+            .and_then(|meta| Some(meta.value().attr("content")?.into()))
             .ok_or(FromHtmlError::MissingToken)?;
 
         Ok(Self {
@@ -168,7 +168,7 @@ impl Post {
             username,
             views,
             image_count,
-            images,
+            images: images.into(),
 
             extra_image_count,
             token,
@@ -187,30 +187,29 @@ pub enum FromElementError {
     MissingLink,
 }
 
-/// A post image
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct Image {
-    /// The image id
-    pub id: String,
+/// A post file
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct File {
+    /// The file id
+    pub id: Box<str>,
 
-    /// The image description
-    pub description: Option<String>,
+    /// The file description
+    pub description: Option<Box<str>>,
 
-    /// The image link
-    pub link: String,
-    // /// The image position
+    /// The file link
+    pub link: Box<str>,
+    // /// The file position
     // pub position: u32,
 
-    // /// The image creation time
+    // /// The file creation time
     // pub created: u32,
     /// The link of the video, if it exists
     ///
     /// Note that this field is not present on the real api.
-    pub video_link: Option<String>,
+    pub video_link: Option<Box<str>>,
 }
 
-impl Image {
+impl File {
     /// Try to parse this from an element
     pub(crate) fn from_element(element: ElementRef<'_>) -> Result<Self, FromElementError> {
         static DESCRIPTION_SELECTOR: Lazy<Selector> =
@@ -223,7 +222,7 @@ impl Image {
         let id = element
             .value()
             .attr("id")
-            .and_then(|id| Some(id.split('-').nth(1)?.to_string()))
+            .and_then(|id| id.split('-').nth(1))
             .ok_or(FromElementError::MissingId)?;
 
         let mut description = String::with_capacity(256);
@@ -241,22 +240,22 @@ impl Image {
         }
         let description = match description.is_empty() {
             true => None,
-            false => Some(description),
+            false => Some(description.into()),
         };
 
         let link = element
             .select(&LINK_SELECTOR)
             .next()
-            .and_then(|a| Some(a.value().attr("data-url")?.to_string()))
+            .and_then(|a| Some(a.value().attr("data-url")?.into()))
             .ok_or(FromElementError::MissingLink)?;
 
         let video_link = element
             .select(&VIDEO_LINK_SELECTOR)
             .next()
-            .and_then(|src| Some(src.value().attr("src")?.to_string()));
+            .and_then(|src| Some(src.value().attr("src")?.into()));
 
         Ok(Self {
-            id,
+            id: id.into(),
             description,
             link,
             video_link,

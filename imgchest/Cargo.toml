@@ -6,19 +6,19 @@ license = "MIT OR Apache-2.0"
 
 [dependencies]
 once_cell = { version = "1.19.0", default-features = false, features = ["std"] }
-reqwest = { version = "0.12.4", features = [ "cookies" ], default-features = false }
+reqwest = { version = "0.12.4", features = [ "cookies", "http2", "json", "multipart", "stream" ], default-features = false }
+serde = { version = "1.0.203", features = [ "derive" ]}
+serde_json = "1.0.117"
 scraper = { version = "0.19.0", default-features = false }
 thiserror = "1.0.61"
 tokio = "1.38.0"
-
-# Optional
-serde = { version = "1.0.203", features = ["derive"], optional = true }
+time = { version = "0.3.36", features = [ "serde", "parsing", "formatting" ] }
+tokio-util = "0.7.11"
 
 [dev-dependencies]
 tokio = { version = "1.38.0", features = [ "macros" ] }
 
 [features]
-default = ["rustls-tls"]
-native-tls = ["reqwest/native-tls"]
-rustls-tls = ["reqwest/rustls-tls"]
-serde = ["dep:serde"]
+default = [ "rustls-tls" ]
+native-tls = [ "reqwest/native-tls" ]
+rustls-tls = [ "reqwest/rustls-tls" ]
