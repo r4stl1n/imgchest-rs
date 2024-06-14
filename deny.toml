@@ -11,7 +11,7 @@ ignore = []
 [licenses]
 confidence-threshold = 0.93
 private = { ignore = true }
-allow = [ "Apache-2.0", "MIT", "BSD-3-Clause", "Unicode-DFS-2016", "MPL-2.0", "ISC", "OpenSSL" ]
+allow = [ "Apache-2.0", "MIT", "BSD-3-Clause", "Unicode-DFS-2016", "MPL-2.0", "ISC", "OpenSSL", "Unicode-3.0" ]
 exceptions = []
 
 [[licenses.clarify]]

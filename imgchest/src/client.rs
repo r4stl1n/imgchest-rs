@@ -356,6 +356,10 @@ impl Client {
         let mut form = Form::new();
 
         if let Some(title) = data.title {
+            if title.len() < 3 {
+                return Err(Error::TitleTooShort);
+            }
+
             form = form.text("title", title);
         }
 

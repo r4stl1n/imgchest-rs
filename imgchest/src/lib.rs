@@ -65,6 +65,10 @@ pub enum Error {
     /// Missing description
     #[error("missing description")]
     MissingDescription,
+
+    /// The title is too short.
+    #[error("title too short, must be at least 3 characters")]
+    TitleTooShort,
 }
 
 #[cfg(test)]
@@ -303,4 +307,20 @@ mod test {
         dbg!(&file);
     }
     */
+
+    #[tokio::test]
+    async fn create_post_too_short_title() {
+        let client = Client::new();
+        client.set_token(get_token());
+
+        let mut builder = CreatePostBuilder::new();
+        builder.title("");
+
+        let err = client
+            .create_post(builder)
+            .await
+            .expect_err("title should have been too short");
+
+        assert!(matches!(err, Error::TitleTooShort));
+    }
 }
