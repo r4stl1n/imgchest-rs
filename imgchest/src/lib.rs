@@ -323,4 +323,20 @@ mod test {
 
         assert!(matches!(err, Error::TitleTooShort));
     }
+
+    #[tokio::test]
+    async fn update_post_too_short_title() {
+        let client = Client::new();
+        client.set_token(get_token());
+
+        let mut builder = UpdatePostBuilder::new();
+        builder.title("");
+
+        let err = client
+            .update_post("3qe4gdvj4j2", builder)
+            .await
+            .expect_err("title should have been too short");
+
+        assert!(matches!(err, Error::TitleTooShort));
+    }
 }

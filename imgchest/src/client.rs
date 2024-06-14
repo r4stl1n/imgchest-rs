@@ -23,6 +23,8 @@ use tokio_util::codec::FramedRead;
 #[derive(Debug)]
 pub struct CreatePostBuilder {
     /// The title of the post.
+    ///
+    /// If specified, it must be at least 3 characters long.
     pub title: Option<String>,
 
     /// The post privacy.
@@ -53,6 +55,8 @@ impl CreatePostBuilder {
     }
 
     /// Set the title.
+    ///
+    /// It must be at least 3 characters long.
     pub fn title(&mut self, title: impl Into<String>) -> &mut Self {
         self.title = Some(title.into());
         self
@@ -148,6 +152,8 @@ impl UploadPostFile {
 #[derive(Debug)]
 pub struct UpdatePostBuilder {
     /// The title
+    ///
+    /// If specified, it must be at least 3 characters long.
     pub title: Option<String>,
 
     /// The post privacy
@@ -168,6 +174,8 @@ impl UpdatePostBuilder {
     }
 
     /// Update the title.
+    ///
+    /// It must be at least 3 characters long.
     pub fn title(&mut self, title: impl Into<String>) -> &mut Self {
         self.title = Some(title.into());
         self
@@ -409,6 +417,10 @@ impl Client {
         let mut form = Vec::new();
 
         if let Some(title) = data.title.as_ref() {
+            if title.len() < 3 {
+                return Err(Error::TitleTooShort);
+            }
+
             form.push(("title", title.as_str()));
         }
 
