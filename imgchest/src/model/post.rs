@@ -22,8 +22,9 @@ pub struct Post {
     /// The number of views
     pub views: u64,
 
-    /// ?
-    pub nsfw: i32,
+    /// Whether the post is nsfw
+    #[serde(with = "u8_to_bool")]
+    pub nsfw: bool,
 
     /// The number of images
     pub image_count: u64,
@@ -93,5 +94,32 @@ impl Privacy {
             Self::Hidden => "hidden",
             Self::Secret => "secret",
         }
+    }
+}
+
+mod u8_to_bool {
+    use serde::de::Error;
+    use serde::de::Unexpected;
+
+    pub(super) fn deserialize<'de, D>(deserializer: D) -> Result<bool, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let value: u8 = serde::Deserialize::deserialize(deserializer)?;
+        match value {
+            0 => Ok(false),
+            1 => Ok(true),
+            n => Err(D::Error::invalid_type(
+                Unexpected::Unsigned(n.into()),
+                &"an integer that is either 0 or 1",
+            )),
+        }
+    }
+
+    pub(super) fn serialize<S>(value: &bool, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_u8(u8::from(*value))
     }
 }
