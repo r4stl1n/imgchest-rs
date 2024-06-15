@@ -44,7 +44,7 @@ pub enum Error {
     MissingToken,
 
     /// Missing images
-    #[error("missing images")]
+    #[error("need at least 1 image")]
     MissingImages,
 
     /// An api operation was not successful
@@ -338,5 +338,33 @@ mod test {
             .expect_err("title should have been too short");
 
         assert!(matches!(err, Error::TitleTooShort));
+    }
+
+    #[tokio::test]
+    async fn add_post_images_missing_images() {
+        let client = Client::new();
+        client.set_token(get_token());
+
+        let err = client
+            .add_post_images("3qe4gdvj4j2", Vec::new())
+            .await
+            .expect_err("should be missing images");
+
+        assert!(matches!(err, Error::MissingImages));
+    }
+
+    #[tokio::test]
+    async fn create_post_missing_images() {
+        let client = Client::new();
+        client.set_token(get_token());
+
+        let builder = CreatePostBuilder::new();
+
+        let err = client
+            .create_post(builder)
+            .await
+            .expect_err("should be missing images");
+
+        assert!(matches!(err, Error::MissingImages));
     }
 }

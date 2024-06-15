@@ -516,10 +516,16 @@ impl Client {
 
         let mut form = Form::new();
 
+        let mut num_images = 0;
         for file in images {
             let part = reqwest::multipart::Part::stream(file.body).file_name(file.file_name);
 
             form = form.part("images[]", part);
+            num_images += 1;
+        }
+
+        if num_images == 0 {
+            return Err(Error::MissingImages);
         }
 
         let response = self
