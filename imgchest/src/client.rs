@@ -200,35 +200,6 @@ impl Default for UpdatePostBuilder {
     }
 }
 
-/// A builder for updating a file.
-#[derive(Debug)]
-pub struct UpdateFileBuilder {
-    /// The file description.
-    ///
-    /// This supports markdown.
-    pub description: Option<String>,
-}
-
-impl UpdateFileBuilder {
-    /// Make a new empty builder.
-    pub fn new() -> Self {
-        Self { description: None }
-    }
-
-    /// Set the description.
-    ///
-    /// This supports markdown.
-    pub fn description(&mut self, description: impl Into<String>) -> &mut Self {
-        self.description = Some(description.into());
-        self
-    }
-}
-
-impl Default for UpdateFileBuilder {
-    fn default() -> Self {
-        Self::new()
-    }
-}
 /// The client
 #[derive(Debug, Clone)]
 pub struct Client {
@@ -594,6 +565,10 @@ impl Client {
         let token = self.get_token().ok_or(Error::MissingToken)?;
         let url = format!("https://api.imgchest.com/v1/file/{id}");
 
+        if description.is_empty() {
+            return Err(Error::MissingDescription);
+        }
+
         let response = self
             .client
             .patch(url)
@@ -641,7 +616,15 @@ impl Client {
         let token = self.get_token().ok_or(Error::MissingToken)?;
         let url = "https://api.imgchest.com/v1/files";
 
-        let data = files.into_iter().collect::<Vec<_>>();
+        let data = files
+            .into_iter()
+            .map(|file| {
+                if file.description.is_empty() {
+                    return Err(Error::MissingDescription);
+                }
+                Ok(file)
+            })
+            .collect::<Result<Vec<_>, _>>()?;
         let data = ApiUpdateFilesBulkRequest { data };
 
         let response = self

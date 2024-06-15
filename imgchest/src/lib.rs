@@ -3,7 +3,6 @@ mod model;
 
 pub use self::client::Client;
 pub use crate::client::CreatePostBuilder;
-pub use crate::client::UpdateFileBuilder;
 pub use crate::client::UpdatePostBuilder;
 pub use crate::client::UploadPostFile;
 use crate::model::ApiCompletedResponse;
@@ -366,5 +365,34 @@ mod test {
             .expect_err("should be missing images");
 
         assert!(matches!(err, Error::MissingImages));
+    }
+
+    #[tokio::test]
+    async fn update_file_missing_description() {
+        let client = Client::new();
+        client.set_token(get_token());
+
+        let err = client
+            .update_file("pwl7lgepyx2", "")
+            .await
+            .expect_err("should be missing description");
+
+        assert!(matches!(err, Error::MissingDescription));
+    }
+
+    #[tokio::test]
+    async fn update_files_bulk_missing_description() {
+        let client = Client::new();
+        client.set_token(get_token());
+
+        let err = client
+            .update_files_bulk(vec![FileUpdate {
+                id: "pwl7lgepyx2".into(),
+                description: "".into(),
+            }])
+            .await
+            .expect_err("should be missing description");
+
+        assert!(matches!(err, Error::MissingDescription));
     }
 }
