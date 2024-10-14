@@ -5,18 +5,18 @@ edition = "2021"
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-once_cell = { version = "1.19.0", default-features = false, features = ["std"] }
-reqwest = { version = "0.12.5", features = [ "cookies", "http2", "json", "multipart", "stream" ], default-features = false }
-serde = { version = "1.0.204", features = [ "derive" ]}
-serde_json = "1.0.120"
+once_cell = { version = "1.20.2", default-features = false, features = ["std"] }
+reqwest = { version = "0.12.8", features = [ "cookies", "http2", "json", "multipart", "stream" ], default-features = false }
+serde = { version = "1.0.210", features = [ "derive" ]}
+serde_json = "1.0.128"
 scraper = { version = "0.19.1", default-features = false }
-thiserror = "1.0.63"
-tokio = "1.38.1"
+thiserror = "1.0.64"
+tokio = "1.40.0"
 time = { version = "0.3.36", features = [ "serde", "parsing", "formatting" ] }
-tokio-util = "0.7.11"
+tokio-util = "0.7.12"
 
 [dev-dependencies]
-tokio = { version = "1.38.1", features = [ "macros" ] }
+tokio = { version = "1.40.0", features = [ "macros" ] }
 
 [features]
 default = [ "rustls-tls" ]
