@@ -14,8 +14,13 @@ use reqwest::multipart::Form;
 use scraper::Html;
 use std::path::Path;
 use std::sync::Arc;
+use std::time::Duration;
+use std::time::Instant;
 use tokio_util::codec::BytesCodec;
 use tokio_util::codec::FramedRead;
+
+const REQUESTS_PER_MINUTE: u8 = 60;
+const ONE_MINUTE: Duration = Duration::from_secs(60);
 
 /// A builder for creating a post.
 ///
@@ -217,9 +222,7 @@ impl Client {
             .cookie_store(true)
             .build()
             .expect("failed to build client");
-        let state = Arc::new(ClientState {
-            token: std::sync::RwLock::new(None),
-        });
+        let state = Arc::new(ClientState::new());
 
         Self { client, state }
     }
@@ -307,10 +310,12 @@ impl Client {
     /// Get a post by id.
     ///
     /// # Authorization
-    /// This function does REQUIRES a token.
+    /// This function REQUIRES a token.
     pub async fn get_post(&self, id: &str) -> Result<Post, Error> {
         let token = self.get_token().ok_or(Error::MissingToken)?;
         let url = format!("https://api.imgchest.com/v1/post/{id}");
+
+        self.state.ratelimit().await;
 
         let response = self
             .client
@@ -327,7 +332,7 @@ impl Client {
     /// Create a post.
     ///
     /// # Authorization
-    /// This function does REQUIRES a token.
+    /// This function REQUIRES a token.
     pub async fn create_post(&self, data: CreatePostBuilder) -> Result<Post, Error> {
         let token = self.get_token().ok_or(Error::MissingToken)?;
         let url = "https://api.imgchest.com/v1/post";
@@ -364,6 +369,8 @@ impl Client {
             form = form.part("images[]", part);
         }
 
+        self.state.ratelimit().await;
+
         let response = self
             .client
             .post(url)
@@ -380,7 +387,7 @@ impl Client {
     /// Update a post.
     ///
     /// # Authorization
-    /// This function does REQUIRES a token.
+    /// This function REQUIRES a token.
     pub async fn update_post(&self, id: &str, data: UpdatePostBuilder) -> Result<Post, Error> {
         let token = self.get_token().ok_or(Error::MissingToken)?;
         let url = format!("https://api.imgchest.com/v1/post/{id}");
@@ -403,6 +410,8 @@ impl Client {
             form.push(("nsfw", bool_to_str(nsfw)));
         }
 
+        self.state.ratelimit().await;
+
         // Not using a multipart form here is intended.
         // Even though we use a multipart form for creating a post,
         // the server will silently ignore requests that aren't form-urlencoded.
@@ -422,10 +431,12 @@ impl Client {
     /// Delete a post.
     ///
     /// # Authorization
-    /// This function does REQUIRES a token.
+    /// This function REQUIRES a token.
     pub async fn delete_post(&self, id: &str) -> Result<(), Error> {
         let token = self.get_token().ok_or(Error::MissingToken)?;
         let url = format!("https://api.imgchest.com/v1/post/{id}");
+
+        self.state.ratelimit().await;
 
         let response = self
             .client
@@ -449,10 +460,12 @@ impl Client {
     /// Returns false if the favorite was removed.
     ///
     /// # Authorization
-    /// This function does REQUIRES a token.
+    /// This function REQUIRES a token.
     pub async fn favorite_post(&self, id: &str) -> Result<bool, Error> {
         let token = self.get_token().ok_or(Error::MissingToken)?;
         let url = format!("https://api.imgchest.com/v1/post/{id}/favorite");
+
+        self.state.ratelimit().await;
 
         let response = self
             .client
@@ -477,7 +490,7 @@ impl Client {
     /// Add images to a post.
     ///
     /// # Authorization
-    /// This function does REQUIRES a token.
+    /// This function REQUIRES a token.
     pub async fn add_post_images<I>(&self, id: &str, images: I) -> Result<Post, Error>
     where
         I: IntoIterator<Item = UploadPostFile>,
@@ -499,6 +512,8 @@ impl Client {
             return Err(Error::MissingImages);
         }
 
+        self.state.ratelimit().await;
+
         let response = self
             .client
             .post(url)
@@ -515,10 +530,12 @@ impl Client {
     /// Get a user by username.
     ///
     /// # Authorization
-    /// This function does REQUIRES a token.
+    /// This function REQUIRES a token.
     pub async fn get_user(&self, username: &str) -> Result<User, Error> {
         let token = self.get_token().ok_or(Error::MissingToken)?;
         let url = format!("https://api.imgchest.com/v1/user/{username}");
+
+        self.state.ratelimit().await;
 
         let response = self
             .client
@@ -540,10 +557,12 @@ impl Client {
     /// As a result, this function is currently useless.
     ///
     /// # Authorization
-    /// This function does REQUIRES a token.
+    /// This function REQUIRES a token.
     pub async fn get_file(&self, id: &str) -> Result<PostFile, Error> {
         let token = self.get_token().ok_or(Error::MissingToken)?;
         let url = format!("https://api.imgchest.com/v1/file/{id}");
+
+        self.state.ratelimit().await;
 
         let response = self
             .client
@@ -560,7 +579,7 @@ impl Client {
     /// Update a file.
     ///
     /// # Authorization
-    /// This function does REQUIRES a token.
+    /// This function REQUIRES a token.
     pub async fn update_file(&self, id: &str, description: &str) -> Result<(), Error> {
         let token = self.get_token().ok_or(Error::MissingToken)?;
         let url = format!("https://api.imgchest.com/v1/file/{id}");
@@ -568,6 +587,8 @@ impl Client {
         if description.is_empty() {
             return Err(Error::MissingDescription);
         }
+
+        self.state.ratelimit().await;
 
         let response = self
             .client
@@ -588,10 +609,12 @@ impl Client {
     /// Delete a file.
     ///
     /// # Authorization
-    /// This function does REQUIRES a token.
+    /// This function REQUIRES a token.
     pub async fn delete_file(&self, id: &str) -> Result<(), Error> {
         let token = self.get_token().ok_or(Error::MissingToken)?;
         let url = format!("https://api.imgchest.com/v1/file/{id}");
+
+        self.state.ratelimit().await;
 
         let response = self
             .client
@@ -627,6 +650,8 @@ impl Client {
             .collect::<Result<Vec<_>, _>>()?;
         let data = ApiUpdateFilesBulkRequest { data };
 
+        self.state.ratelimit().await;
+
         let response = self
             .client
             .patch(url)
@@ -650,6 +675,46 @@ impl Default for Client {
 #[derive(Debug)]
 struct ClientState {
     token: std::sync::RwLock<Option<Arc<str>>>,
+    ratelimit_data: std::sync::Mutex<(Instant, u8)>,
+}
+
+impl ClientState {
+    fn new() -> Self {
+        let now = Instant::now();
+
+        Self {
+            token: std::sync::RwLock::new(None),
+            ratelimit_data: std::sync::Mutex::new((now, REQUESTS_PER_MINUTE)),
+        }
+    }
+
+    async fn ratelimit(&self) {
+        loop {
+            let sleep_duration = {
+                let mut ratelimit_data = self
+                    .ratelimit_data
+                    .lock()
+                    .expect("ratelimit mutex poisoned");
+                let (ref mut last_refreshed, ref mut remaining_requests) = &mut *ratelimit_data;
+
+                // Refresh the number of requests each minute.
+                if last_refreshed.elapsed() >= ONE_MINUTE {
+                    *last_refreshed = Instant::now();
+                    *remaining_requests = REQUESTS_PER_MINUTE;
+                }
+
+                // If we are allowed to make a request now, make it.
+                if *remaining_requests > 0 {
+                    *remaining_requests -= 1;
+                    return;
+                }
+
+                // Otherwise, sleep until the next refresh and try again.
+                ONE_MINUTE.saturating_sub(last_refreshed.elapsed())
+            };
+            tokio::time::sleep(sleep_duration).await;
+        }
+    }
 }
 
 fn bool_to_str(b: bool) -> &'static str {
