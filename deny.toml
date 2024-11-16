@@ -11,7 +11,7 @@ ignore = []
 [licenses]
 confidence-threshold = 0.93
 private = { ignore = true }
-allow = [ "Apache-2.0", "MIT", "BSD-3-Clause", "Unicode-DFS-2016", "MPL-2.0", "ISC", "OpenSSL" ]
+allow = [ "Apache-2.0", "MIT", "BSD-3-Clause", "Unicode-DFS-2016", "MPL-2.0", "ISC", "OpenSSL", "Unicode-3.0" ]
 exceptions = []
 
 [[licenses.clarify]]
@@ -32,9 +32,6 @@ highlight = "all"
 skip = [
     { name = "phf_shared", version = "0.10.0" },
     { name = "phf_generator", version = "0.10.0" },
-    { name = "phf", version = "0.10.1" },
-    { name = "idna", version = "0.3.0" },
-    { name = "phf_codegen", version = "0.10.0" },
 ]
 deny = []
 

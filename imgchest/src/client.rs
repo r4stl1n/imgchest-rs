@@ -7,7 +7,6 @@ use crate::Post;
 use crate::PostFile;
 use crate::PostPrivacy;
 use crate::ScrapedPost;
-use crate::ScrapedPostFile;
 use crate::User;
 use reqwest::header::AUTHORIZATION;
 use reqwest::multipart::Form;
@@ -21,6 +20,7 @@ use tokio_util::codec::FramedRead;
 
 const REQUESTS_PER_MINUTE: u8 = 60;
 const ONE_MINUTE: Duration = Duration::from_secs(60);
+const API_BASE: &str = "https://api.imgchest.com";
 
 /// A builder for creating a post.
 ///
@@ -227,11 +227,12 @@ impl Client {
         Self { client, state }
     }
 
-    /// Scrape a post from a url.
+    /// Scrape a post from a post id.
     ///
     /// # Authorization
     /// This function does NOT require the use of a token.
-    pub async fn get_scraped_post(&self, url: &str) -> Result<ScrapedPost, Error> {
+    pub async fn get_scraped_post(&self, id: &str) -> Result<ScrapedPost, Error> {
+        let url = format!("https://imgchest.com/p/{id}");
         let text = self
             .client
             .get(url)
@@ -248,40 +249,6 @@ impl Client {
         .await??;
 
         Ok(post)
-    }
-
-    /// Load extra files for a scraped post.
-    ///
-    /// # Authorization
-    /// This function does NOT require the use of a token.
-    pub async fn load_extra_files_for_scraped_post(
-        &self,
-        post: &ScrapedPost,
-    ) -> Result<Vec<ScrapedPostFile>, Error> {
-        let id = &post.id;
-        let url = format!("https://imgchest.com/p/{id}/loadAll");
-        let text = self
-            .client
-            .post(url.as_str())
-            .header("x-requested-with", "XMLHttpRequest")
-            .form(&[("_token", &*post.token)])
-            .send()
-            .await?
-            .error_for_status()?
-            .text()
-            .await?;
-
-        let images = tokio::task::spawn_blocking(move || {
-            let html = Html::parse_fragment(&text);
-            html.root_element()
-                .children()
-                .filter_map(scraper::ElementRef::wrap)
-                .map(ScrapedPostFile::from_element)
-                .collect::<Result<Vec<_>, _>>()
-        })
-        .await??;
-
-        Ok(images)
     }
 
     /// Set the token to use for future requests.
@@ -313,7 +280,7 @@ impl Client {
     /// This function REQUIRES a token.
     pub async fn get_post(&self, id: &str) -> Result<Post, Error> {
         let token = self.get_token().ok_or(Error::MissingToken)?;
-        let url = format!("https://api.imgchest.com/v1/post/{id}");
+        let url = format!("{API_BASE}/v1/post/{id}");
 
         self.state.ratelimit().await;
 
@@ -335,7 +302,7 @@ impl Client {
     /// This function REQUIRES a token.
     pub async fn create_post(&self, data: CreatePostBuilder) -> Result<Post, Error> {
         let token = self.get_token().ok_or(Error::MissingToken)?;
-        let url = "https://api.imgchest.com/v1/post";
+        let url = format!("{API_BASE}/v1/post");
 
         let mut form = Form::new();
 
@@ -390,7 +357,7 @@ impl Client {
     /// This function REQUIRES a token.
     pub async fn update_post(&self, id: &str, data: UpdatePostBuilder) -> Result<Post, Error> {
         let token = self.get_token().ok_or(Error::MissingToken)?;
-        let url = format!("https://api.imgchest.com/v1/post/{id}");
+        let url = format!("{API_BASE}/v1/post/{id}");
 
         let mut form = Vec::new();
 
@@ -434,7 +401,7 @@ impl Client {
     /// This function REQUIRES a token.
     pub async fn delete_post(&self, id: &str) -> Result<(), Error> {
         let token = self.get_token().ok_or(Error::MissingToken)?;
-        let url = format!("https://api.imgchest.com/v1/post/{id}");
+        let url = format!("{API_BASE}/v1/post/{id}");
 
         self.state.ratelimit().await;
 
@@ -463,7 +430,7 @@ impl Client {
     /// This function REQUIRES a token.
     pub async fn favorite_post(&self, id: &str) -> Result<bool, Error> {
         let token = self.get_token().ok_or(Error::MissingToken)?;
-        let url = format!("https://api.imgchest.com/v1/post/{id}/favorite");
+        let url = format!("{API_BASE}/v1/post/{id}/favorite");
 
         self.state.ratelimit().await;
 
@@ -496,7 +463,7 @@ impl Client {
         I: IntoIterator<Item = UploadPostFile>,
     {
         let token = self.get_token().ok_or(Error::MissingToken)?;
-        let url = format!("https://api.imgchest.com/v1/post/{id}/add");
+        let url = format!("{API_BASE}/v1/post/{id}/add");
 
         let mut form = Form::new();
 
@@ -533,7 +500,7 @@ impl Client {
     /// This function REQUIRES a token.
     pub async fn get_user(&self, username: &str) -> Result<User, Error> {
         let token = self.get_token().ok_or(Error::MissingToken)?;
-        let url = format!("https://api.imgchest.com/v1/user/{username}");
+        let url = format!("{API_BASE}/v1/user/{username}");
 
         self.state.ratelimit().await;
 
@@ -560,7 +527,7 @@ impl Client {
     /// This function REQUIRES a token.
     pub async fn get_file(&self, id: &str) -> Result<PostFile, Error> {
         let token = self.get_token().ok_or(Error::MissingToken)?;
-        let url = format!("https://api.imgchest.com/v1/file/{id}");
+        let url = format!("{API_BASE}/v1/file/{id}");
 
         self.state.ratelimit().await;
 
@@ -582,7 +549,7 @@ impl Client {
     /// This function REQUIRES a token.
     pub async fn update_file(&self, id: &str, description: &str) -> Result<(), Error> {
         let token = self.get_token().ok_or(Error::MissingToken)?;
-        let url = format!("https://api.imgchest.com/v1/file/{id}");
+        let url = format!("{API_BASE}/v1/file/{id}");
 
         if description.is_empty() {
             return Err(Error::MissingDescription);
@@ -612,7 +579,7 @@ impl Client {
     /// This function REQUIRES a token.
     pub async fn delete_file(&self, id: &str) -> Result<(), Error> {
         let token = self.get_token().ok_or(Error::MissingToken)?;
-        let url = format!("https://api.imgchest.com/v1/file/{id}");
+        let url = format!("{API_BASE}/v1/file/{id}");
 
         self.state.ratelimit().await;
 
@@ -637,7 +604,7 @@ impl Client {
         I: IntoIterator<Item = FileUpdate>,
     {
         let token = self.get_token().ok_or(Error::MissingToken)?;
-        let url = "https://api.imgchest.com/v1/files";
+        let url = format!("{API_BASE}/v1/files");
 
         let data = files
             .into_iter()

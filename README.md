@@ -47,7 +47,7 @@ async fn main() -> anyhow::Result<()> {
     let client = imgchest::Client::new();
     
     let post = client
-        .get_scraped_post("https://imgchest.com/p/3qe4gdvj4j2")
+        .get_scraped_post("3qe4gdvj4j2")
         .await?;
     
     dbg!(&post);
@@ -57,21 +57,26 @@ async fn main() -> anyhow::Result<()> {
 ```
 
 ## Design
-~~This library will attempt to completely avoid official API usage.~~
-~~This is because of 2 reasons:~~
-1. ~~The API requires a login to access public data.~~
-2. ~~The API has obscene ratelimits, only 60 per hour.~~
+In the past, this library attempted to completely avoid official API usage.
+This was due to the following 2 reasons:
+1. The API required a login to access public data.
+2. The API had obscene ratelimits, only 60 per hour.
 
-~~As a result, a design based on scraping will be superior to one based on recommended API usage.~~
-~~If the API is fixed, this library will be likely be reworked to target that instead.~~
+While the ratelimits seem to have been updated to be tolerable (60 requests per minute),
+fetching posts still requires a login.
+As a result, API support has been added to this library while also attempting to provide scraping-based alternatives where possible.
+It is suggested to use the scraping-based functionality when possible to avoid the need to use an API token and to avoid the ratelimit.
 
+Scraped API objects in this library are tailored to match the official API's as much as possible, 
+though some fields are missing.
 
-This library implements the API while also attempting to provide scraping-based alternatives where possible.
-
-(Scraped) API objects in this library are tailored to match the official API's as much as possible, 
-though some fields are missing and extra fields are included where needed.
-Usage of these objects is also noticablely more complicated.
-As an example, the Post object may not load all images in one API call and may need a second call.
+### API Limitations
+The API is limited in a few ways.
+This library may gain more scraping-based functionality to work around these limitations.
+These limitations are ordered by severity.
+1. Missing post file reorder endpoint
+2. Authentication for public data
+3. Ratelimits
 
 ## References
  * https://imgchest.com/docs/api/1.0/general/overview

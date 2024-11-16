@@ -10,7 +10,6 @@ use crate::model::ApiResponse;
 use crate::model::ApiUpdateFilesBulkRequest;
 pub use crate::model::FileUpdate;
 pub use crate::model::InvalidScrapedPostError;
-pub use crate::model::InvalidScrapedPostFileError;
 pub use crate::model::Post;
 pub use crate::model::PostFile;
 pub use crate::model::PostPrivacy;
@@ -33,10 +32,6 @@ pub enum Error {
     /// Failed to parse post
     #[error("invalid scraped post")]
     InvalidScrapedPost(#[from] InvalidScrapedPostError),
-
-    /// Failed to parse a scraped post file
-    #[error("invalid scraped post file")]
-    InvalidScrapedPostFile(#[from] InvalidScrapedPostFileError),
 
     /// Missing a token
     #[error("missing token")]
@@ -77,8 +72,9 @@ mod test {
     use time::format_description::well_known::Iso8601;
     use time::OffsetDateTime;
 
-    const POST_URL: &str = "https://imgchest.com/p/3qe4gdvj4j2";
-    const VIDEO_POST_URL: &str = "https://imgchest.com/p/pwl7lgepyx2";
+    const POST_ID: &str = "3qe4gdvj4j2";
+    const GIF_POST_ID: &str = "pwl7lgepyx2";
+    const VIDEO_POST_ID: &str = "ej7mko58jyd";
 
     fn get_token() -> &'static str {
         static TOKEN: OnceLock<String> = OnceLock::new();
@@ -111,7 +107,7 @@ mod test {
     async fn get_scraped_post() {
         let client = Client::new();
         let post = client
-            .get_scraped_post(POST_URL)
+            .get_scraped_post(POST_ID)
             .await
             .expect("failed to get scraped post");
         assert!(&*post.id == "3qe4gdvj4j2");
@@ -120,7 +116,7 @@ mod test {
         // assert!(post.privacy == "public");
         // assert!(post.report_status == 1);
         assert!(post.views >= 198);
-        // assert!(post.nsfw == 0);
+        assert!(!post.nsfw);
         assert!(post.image_count == 4);
         // assert!(post.created == "2019-11-03T00:36:00.000000Z");
 
@@ -129,33 +125,29 @@ mod test {
             .description
             .as_ref()
             .expect("missing description")
-            .starts_with("Released in the arcades in 1981, Donkey Kong"));
+            .starts_with("**Description**  \nReleased in the arcades in 1981, Donkey Kong"));
         assert!(&*post.images[0].link == "https://cdn.imgchest.com/files/nw7w6cmlvye.png");
-        assert!(post.images[0].video_link.is_none());
 
         assert!(&*post.images[1].id == "kwye3cpag4b");
         assert!(post.images[1].description.as_deref() == Some("amstrad - apple ii - atari - colecovision - c64 - msx\nnes - pc - vic-20 - spectrum - tI-99 4A - arcade"));
         assert!(&*post.images[1].link == "https://cdn.imgchest.com/files/kwye3cpag4b.png");
-        assert!(post.images[1].video_link.is_none());
 
         assert!(&*post.images[2].id == "5g4z9c8ok72");
-        assert!(post.images[2].description.is_none());
+        assert!(post.images[2].description.as_deref() == Some(""));
         assert!(&*post.images[2].link == "https://cdn.imgchest.com/files/5g4z9c8ok72.png");
-        assert!(post.images[2].video_link.is_none());
 
         assert!(&*post.images[3].id == "we4gdcv5j4r");
-        assert!(post.images[3].description.is_none());
+        assert!(post.images[3].description.as_deref() == Some(""));
         assert!(&*post.images[3].link == "https://cdn.imgchest.com/files/we4gdcv5j4r.jpg");
-        assert!(post.images[3].video_link.is_none());
 
         dbg!(&post);
     }
 
     #[tokio::test]
-    async fn get_scraped_video_post() {
+    async fn get_scraped_gif_post() {
         let client = Client::new();
         let post = client
-            .get_scraped_post(VIDEO_POST_URL)
+            .get_scraped_post(GIF_POST_ID)
             .await
             .expect("failed to get post");
 
@@ -168,10 +160,27 @@ mod test {
         assert!(&*post.images[0].id == "6yxkcz5ml7w");
         assert!(post.images[0].description.as_deref() == Some("Notice how inserting an AGIF is now supported, but does not want to be moved from its initial position."));
         assert!(&*post.images[0].link == "https://cdn.imgchest.com/files/6yxkcz5ml7w.gif");
-        assert!(
-            post.images[0].video_link.as_deref()
-                == Some("https://cdn.imgchest.com/files/6yxkcz5ml7w.mp4")
-        );
+
+        dbg!(&post);
+    }
+
+    #[tokio::test]
+    async fn get_scraped_video_post() {
+        let client = Client::new();
+        let post = client
+            .get_scraped_post(VIDEO_POST_ID)
+            .await
+            .expect("failed to get post");
+
+        assert!(&*post.id == "ej7mko58jyd");
+        assert!(&*post.title == "Better with sound");
+        assert!(&*post.username == "moods");
+        assert!(post.views >= 336);
+        assert!(post.image_count == 1);
+
+        assert!(&*post.images[0].id == "e4gdcbqe294");
+        assert!(post.images[0].description.is_none());
+        assert!(&*post.images[0].link == "https://cdn.imgchest.com/files/e4gdcbqe294.mp4");
 
         dbg!(&post);
     }
