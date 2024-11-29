@@ -1,3 +1,18 @@
+[package]
+name = "imgchest-rs"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/r4stl1n/imgchest-rs"
+homepage = "https://github.com/r4stl1n/imgchest-rs"
+readme = "README.md"
+categories = ["science", "algorithms"]
+include = [
+    "src/**/*",
+    "Cargo.toml",
+    "README.md"
+]
+
 [workspace]
 resolver = "2"
 members = [
