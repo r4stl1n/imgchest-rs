@@ -1,12 +1,16 @@
 [package]
-name = "imgchest_rs"
-version = "0.1.0"
+name = "imgchest"
+description = "A strongly-typed client for the Kraken REST API"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
 edition = "2021"
-license = "MIT"
+license = "Apache-2.0"
+version = "0.1.0"
 repository = "https://github.com/r4stl1n/imgchest-rs"
-homepage = "https://github.com/r4stl1n/imgchest-rs"
-readme = "README.md"
-categories = ["science", "algorithms"]
+keywords = ["imgchest", "api", "client", "rest"]
+authors = [""]
+
 include = [
     "src/**/*",
     "Cargo.toml",
